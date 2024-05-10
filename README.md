@@ -88,7 +88,15 @@ GET /check-cert?dns=example.com
 }
 ```
 
-#### Error (Status Code: 404 or 400)
+#### Error (Status Code: 400)
+
+```json
+{
+  "error": "Could not fetch certificate for domain \"insecure-domain\""
+}
+```
+
+#### Error (Status Code: 404)
 
 ```json
 {
