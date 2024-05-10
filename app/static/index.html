@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate Expiry Checker</title>
+    <style>
+        :root {
+            --background-color: #333;
+            --text-color: #f1f1f1;
+            --button-bg-color: #606060;
+            --input-bg-color: #444;
+            --error-color: pink;
+        }
+        
+        body.light-mode {
+            --background-color: #fff;
+            --text-color: #333;
+            --button-bg-color: #e0e0e0;
+            --input-bg-color: #f9f9f9;
+            --error-color: red;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 50px;
+            background-color: var(--background-color);
+            color: var(--text-color);
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            font-size: 1rem;
+            background-color: var(--button-bg-color);
+            color: var(--text-color);
+        }
+        input {
+            background-color: var(--input-bg-color);
+        }
+        #response {
+            margin-top: 20px;
+            font-size: 1rem;
+        }
+        .error {
+            color: var(--error-color);
+        }
+        .theme-switcher {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-switcher" onclick="toggleTheme()">Toggle Theme</div>
+    <h1>Check SSL Certificate Expiry</h1>
+    <label for="dns">Enter Domain Name:</label>
+    <input type="text" id="dns" placeholder="example.com">
+    <button id="btnCheck">Check Certificate Expiry</button>
+    
+    <div id="response"></div>
+
+    <script>
+        const btnCheck = document.getElementById('btnCheck');
+
+        btnCheck.addEventListener('click', checkCert)
+
+        function isValidDomain(domain) {
+            const domainPattern = /^(?!:\/\/)([a-zA-Z0-9-_]+\.)+[a-zA-Z]{2,6}$/;
+            return domainPattern.test(domain);
+        }
+
+        async function checkCert() {
+            let dns = document.getElementById('dns').value;
+            const responseDiv = document.getElementById('response');
+            responseDiv.innerHTML = '';
+
+            if (dns === '') {
+                dns = 'vegait.rs'
+            }
+
+            console.log(dns)
+            if (!isValidDomain(dns)) {
+                responseDiv.innerHTML = `<p class="error">Invalid domain format. Please use a valid format like "example.com".</p>`;
+                return;
+            }
+
+            try {
+                const response = await fetch(`/check-cert?dns=${dns}`);
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || `HTTP error! Status: ${response.status}`);
+                }
+                responseDiv.innerHTML = `
+                    <p>Domain: ${data.dns}</p>
+                    <p>Expiration Date: ${data.expiration_date}</p>
+                `;
+            } catch (error) {
+                responseDiv.innerHTML = `<p class="error">Error fetching certificate data: ${error.message}</p>`;
+            }
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('light-mode');
+        }
+
+        document.getElementById('dns').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                checkCert();
+            }
+        })
+    
+    </script>
+</body>
+</html>
